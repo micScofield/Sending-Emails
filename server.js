@@ -27,7 +27,7 @@ app.use(express.urlencoded({
 app.use('/public', express.static(path.join(__dirname + '/public'))); //Works
 
 app.get('/', (req, res) => {
-    res.render('contact')
+    res.render('contact');
 })
 
 app.post('/send', (req, res) => {
