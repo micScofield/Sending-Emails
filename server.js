@@ -33,7 +33,10 @@ app.get('/', (req, res) => {
 app.post('/send', (req, res) => {
     console.log(req.body)
     return res.json({msg: 'Form data saved !'})
-    // send email here
+    // send email here (npm i @sendgrid/mail) See yoursTRULY YT for reference
+    // verigy sender on send grid account
+    // create api key> restricted access > send emails, schedule emails > Create
+    // Use that API key inside config
 })
 
 const PORT = process.env.PORT || 5000
