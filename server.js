@@ -1,14 +1,17 @@
-const express = require('express')
-const nodemailer = require('nodemailer')
-const exphbs = require('express-handlebars')
-const bodyParser = require('body-parser')
-const path = require('path')
+const express = require("express");
+const exphbs = require("express-handlebars");
+const path = require("path");
+const dotenv = require("dotenv");
+const sgMail = require("@sendgrid/mail");
 
-const app = express()
+const app = express();
+
+// env configuration
+dotenv.config();
 
 //View Engine Setup
 app.engine("handlebars", exphbs({ defaultLayout: false }));
-app.set('view engine', 'handlebars')
+app.set("view engine", "handlebars");
 
 //body parser middleware
 //For < Express 4.16
@@ -17,28 +20,51 @@ app.set('view engine', 'handlebars')
 
 //For > 4.17
 app.use(express.json());
-app.use(express.urlencoded({
-  extended: true
-}))
+app.use(
+  express.urlencoded({
+    extended: true,
+  })
+);
 
 //Public Folder
-//NOTE- app.use(express.static('./public')) //is not working when importing files inside my handlebares, instead use below approach:-
+app.use("/public", express.static(path.join(__dirname + "/public"))); //Works
 
-app.use('/public', express.static(path.join(__dirname + '/public'))); //Works
+// Set api key to sgMail
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-app.get('/', (req, res) => {
-    res.render('contact');
-})
+// Index Route
+app.get("/", (req, res) => {
+  res.render("contact");
+});
 
-app.post('/send', (req, res) => {
-    console.log(req.body)
-    return res.json({msg: 'Form data saved !'})
-    // send email here (npm i @sendgrid/mail) See yoursTRULY YT for reference
-    // verigy sender on send grid account
-    // create api key> restricted access > send emails, schedule emails > Create
-    // Use that API key inside config
-})
+// Form submission endpoint
+app.post("/send", (req, res) => {
+  console.log(req.body);
 
-const PORT = process.env.PORT || 5000
+  const { email, name, company, phone, message } = req.body;
 
-app.listen(PORT, () => console.log(`Server started on port ${PORT}`))
+  // send an asynchronous email here...
+
+  const emailConfig = {
+    to: email,
+    from: process.env.FROM_MAILING_ADDRESS,
+    subject: "test subject",
+    html: `
+      <h1>We have received your submission !</h1>
+      <h3>Name: ${name}</h3>
+      <h3>Company: ${company}</h3>
+      <h3>phone: ${phone}</h3>
+      <h3>message: ${message}</h3>
+    `,
+  };
+
+  sgMail.send(emailConfig).then(console.log).catch(console.error);
+
+  return res.json({
+    msg: "Please check your mailbox !",
+  });
+});
+
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
